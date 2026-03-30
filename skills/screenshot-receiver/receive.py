@@ -154,7 +154,6 @@ def open_app_window(url: str):
     import subprocess
     # Absolute paths (macOS)
     app_paths = [
-        "/Applications/Arc.app/Contents/MacOS/Arc",
         "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         "/Applications/Chromium.app/Contents/MacOS/Chromium",
         "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
