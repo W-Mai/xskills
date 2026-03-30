@@ -1,6 +1,6 @@
 ---
 name: "screenshot-receiver"
-description: "截图接收工具：弹出 Tkinter 窗口，用户通过 ⌘V 粘贴剪贴板截图或浏览文件，图片保存到临时目录供 AI 读取后自动清理。当用户说「给你截图」「贴图」「看截图」「传图片」时使用。"
+description: "截图接收工具：启动本地 Web 服务并弹出浏览器窗口（Chrome --app 模式），用户通过 ⌘V 粘贴或拖拽图片，图片保存到临时目录供 AI 读取后自动清理。当用户说「给你截图」「贴图」「看截图」「传图片」时使用。"
 inclusion: manual
 ---
 
@@ -10,28 +10,34 @@ inclusion: manual
 
 ## 使用流程
 
-1. 运行 Python 脚本弹出接收窗口：
+1. 找到 `receive.py` 脚本的路径（与本文件同目录），运行：
    ```bash
-   python3 ~/.kiro/skills/screenshot-receiver/receive.py
+   python3 <this-skill-dir>/receive.py
    ```
 
-2. 脚本会弹出一个 Tkinter 窗口，用户可以：
-   - **⌘V** 粘贴剪贴板中的截图（macOS）
-   - **Browse** 按钮选择本地图片文件
-   - 支持多次粘贴/选择
-   - 点击 **Done** 或按 **Esc** 完成
+2. 脚本会启动本地 HTTP 服务并自动打开浏览器窗口（Chromium 系浏览器使用 `--app` 模式，无地址栏），用户可以：
+   - **⌘V / Ctrl+V** 粘贴剪贴板中的截图
+   - **拖拽** 图片文件到页面
+   - **Browse** 按钮选择本地文件
+   - 支持多次粘贴/拖拽
+   - 点击 **Done** 关闭窗口
 
-3. 脚本退出后，stdout 输出图片路径（每行一个），如果没有图片则输出 `NO_IMAGES`
+3. 脚本退出后，stdout 输出图片路径（每行一个），没有图片则输出 `NO_IMAGES`
 
-4. 用 `fs_read` 的 `Image` mode 读取图片路径
+4. 用你可用的图片读取工具（如文件读取、图片查看等）读取输出的路径
 
 5. **读取完毕后，必须清理临时目录**：
    ```bash
    rm -rf /tmp/kiro-screenshot-*
    ```
 
-## 注意事项
+## 依赖
 
-- 临时文件在 `/tmp/kiro-screenshot-*/` 下，读取后务必删除
-- 粘贴功能依赖 macOS 的 `osascript`（AppleScript），仅支持 macOS
-- 需要系统安装了 Python 3 + tkinter（macOS 自带）
+- Python 3（标准库，无第三方依赖）
+- Chromium 系浏览器（Arc / Chrome / Edge / Brave 等，用于 `--app` 模式；没有则 fallback 到默认浏览器）
+
+## 跨平台支持
+
+- macOS：优先查找 `/Applications/` 下的浏览器
+- Linux / 其他：通过 PATH 查找 `google-chrome`、`chromium` 等命令
+- Windows：fallback 到 `webbrowser.open()`
