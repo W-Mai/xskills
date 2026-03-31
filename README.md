@@ -61,6 +61,7 @@ rm -rf /tmp/xskills
 | Skill | Description | Dependencies |
 |---|---|---|
 | [screenshot-receiver](skills/screenshot-receiver/) | Receive screenshots via browser paste/drag-drop. Launches a local web server with Chrome `--app` mode window. | Python 3 (stdlib only), Chromium-based browser |
+| [interactive-form](skills/interactive-form/) | Structured rich form for AI-human interaction. Renders JSON form specs as web pages with radio/checkbox/text/image/slider/code fields. | Python 3 (stdlib only), Chromium-based browser |
 | [rust-coding-standards](skills/rust-coding-standards/) | High-quality Rust coding standards and practices. | None (documentation only) |
 
 ## Structure
