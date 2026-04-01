@@ -161,12 +161,12 @@ def open_app_window(url: str):
     ]
     for p in app_paths:
         if Path(p).exists():
-            subprocess.Popen([p, f"--app={url}", "--window-size=400,420"])
+            subprocess.Popen([p, f"--app={url}", "--window-size=400,420"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return
     # PATH-based lookup (Linux / other)
     for cmd in ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "microsoft-edge"]:
         if shutil.which(cmd):
-            subprocess.Popen([cmd, f"--app={url}", "--window-size=400,420"])
+            subprocess.Popen([cmd, f"--app={url}", "--window-size=400,420"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return
     webbrowser.open(url)
 

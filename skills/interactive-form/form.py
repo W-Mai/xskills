@@ -155,14 +155,14 @@ def build_html(spec: dict) -> str:
   .slider-wrap {{ display:flex; align-items:center; gap:12px; }}
   .slider-wrap input {{ flex:1; }}
   .slider-val {{ font-size:14px; font-weight:600; color:#4a90d9; min-width:2em; text-align:center; }}
-  .toggle-wrap {{ display:flex; align-items:center; gap:8px; cursor:pointer; }}
-  .toggle-track {{ width:44px; height:24px; background:#ccc; border-radius:12px; position:relative; transition:background .2s; }}
+  .toggle-wrap {{ display:inline-flex; align-items:center; gap:8px; cursor:pointer; }}
+  .toggle-track {{ display:inline-block; width:44px; height:24px; min-width:44px; background:#ccc; border-radius:12px; position:relative; transition:background .2s; }}
   .toggle-track.danger {{ background:#ccc; }}
-  input:checked + .toggle-track {{ background:#4a90d9; }}
+  input:checked + .toggle-track {{ background:#22c55e; }}
   input:checked + .toggle-track.danger {{ background:#ef4444; }}
   .toggle-thumb {{ width:20px; height:20px; background:#fff; border-radius:50%; position:absolute; top:2px; left:2px; transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }}
   input:checked + .toggle-track .toggle-thumb {{ transform:translateX(20px); }}
-  input[data-toggle] {{ display:none; }}
+  input[data-toggle] {{ position:absolute; opacity:0; pointer-events:none; }}
   .confirm-label {{ font-size:13px; color:#555; }}
   .image-drop {{ border:2px dashed #ccc; border-radius:12px; padding:24px; text-align:center; cursor:pointer; transition:border-color .2s; }}
   .image-drop:hover, .image-drop.over {{ border-color:#4a90d9; background:#f0f7ff; }}
@@ -279,13 +279,15 @@ function collect() {{
 }}
 
 function submit() {{
-  fetch('/submit', {{ method: 'POST', headers: {{'Content-Type': 'application/json'}}, body: JSON.stringify(collect()) }});
-  document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;color:#888;font-size:16px">Done</div>';
-  setTimeout(() => window.close(), 300);
+  document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;color:#888;font-size:16px">Submitting...</div>';
+  fetch('/submit', {{ method: 'POST', headers: {{'Content-Type': 'application/json'}}, body: JSON.stringify(collect()) }})
+    .then(() => setTimeout(() => window.close(), 200))
+    .catch(() => setTimeout(() => window.close(), 200));
 }}
 function cancel() {{
-  fetch('/cancel', {{ method: 'POST' }});
-  window.close();
+  fetch('/cancel', {{ method: 'POST' }})
+    .then(() => setTimeout(() => window.close(), 200))
+    .catch(() => setTimeout(() => window.close(), 200));
 }}
 </script></body></html>"""
 
@@ -332,11 +334,13 @@ def open_app_window(url: str):
     ]
     for p in app_paths:
         if Path(p).exists():
-            subprocess.Popen([p, f"--app={url}", "--window-size=560,700"])
+            subprocess.Popen([p, f"--app={url}", "--window-size=560,700"],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return
     for cmd in ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "microsoft-edge"]:
         if shutil.which(cmd):
-            subprocess.Popen([cmd, f"--app={url}", "--window-size=560,700"])
+            subprocess.Popen([cmd, f"--app={url}", "--window-size=560,700"],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return
     webbrowser.open(url)
 
