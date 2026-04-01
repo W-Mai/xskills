@@ -136,6 +136,12 @@ def build_html(spec: dict) -> str:
 
         field_html += "</div>"
 
+    # Auto-append _extra textarea for custom user input
+    if not any(f["id"] == "_extra" for f in fields):
+        field_html += '<div class="field extra-field"><label>还有别的想说的吗？</label>'
+        field_html += '<textarea data-id="_extra" rows="2" class="input" placeholder="补充想法、备注、吐槽……"></textarea></div>'
+        fields.append({"id": "_extra", "type": "textarea"})
+
     return f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>{title}</title>
 <style>
@@ -279,8 +285,9 @@ function collect() {{
 }}
 
 function submit() {{
+  const data = JSON.stringify(collect());
   document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;color:#888;font-size:16px">Submitting...</div>';
-  fetch('/submit', {{ method: 'POST', headers: {{'Content-Type': 'application/json'}}, body: JSON.stringify(collect()) }})
+  fetch('/submit', {{ method: 'POST', headers: {{'Content-Type': 'application/json'}}, body: data }})
     .then(() => setTimeout(() => window.close(), 200))
     .catch(() => setTimeout(() => window.close(), 200));
 }}
