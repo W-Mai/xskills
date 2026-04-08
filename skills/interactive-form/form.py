@@ -38,7 +38,9 @@ def build_html(spec: dict) -> str:
         req_mark = ' <span style="color:#ef4444">*</span>' if required else ""
 
         if ftype == "markdown":
-            field_html += f'<div class="field"><div class="md-content">{f.get("content", "")}</div></div>'
+            import html as html_mod
+            escaped = html_mod.escape(f.get("content", ""))
+            field_html += f'<div class="field"><div class="md-content" data-md="{escaped}"></div></div>'
             continue
 
         if ftype == "display_image":
@@ -182,7 +184,15 @@ def build_html(spec: dict) -> str:
   .tag-chip {{ display:flex; align-items:center; gap:2px; padding:2px 8px; background:#e8f0fe; border-radius:6px; font-size:12px; }}
   .tag-chip button {{ background:none; border:none; cursor:pointer; color:#888; font-size:14px; }}
   .tags-input {{ border:none!important; outline:none; flex:1; min-width:80px; padding:4px; font-size:13px; }}
-  .md-content {{ font-size:13px; color:#555; line-height:1.6; }}
+  .md-content {{ font-size:13px; color:#555; line-height:1.7; }}
+  .md-content h1,.md-content h2,.md-content h3 {{ margin:12px 0 6px; color:#333; }}
+  .md-content h3 {{ font-size:14px; }}
+  .md-content h2 {{ font-size:15px; }}
+  .md-content p {{ margin:4px 0; }}
+  .md-content code {{ background:#f0f0f0; padding:1px 5px; border-radius:4px; font-size:12px; font-family:'SF Mono',Menlo,monospace; }}
+  .md-content strong {{ color:#333; }}
+  .md-content ul,.md-content ol {{ padding-left:20px; margin:4px 0; }}
+  .md-content li {{ margin:2px 0; }}
   .actions {{ display:flex; gap:10px; justify-content:flex-end; margin-top:20px; padding-top:16px; border-top:1px solid #eee; }}
   .btn {{ padding:8px 24px; border:none; border-radius:8px; font-size:14px; cursor:pointer; transition:all .15s; }}
   .btn-primary {{ background:#4a90d9; color:#fff; }}
@@ -296,6 +306,31 @@ function cancel() {{
     .then(() => setTimeout(() => window.close(), 200))
     .catch(() => setTimeout(() => window.close(), 200));
 }}
+// Lightweight markdown renderer
+function renderMd(src) {{
+  var h = src
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#x27;/g, "'")
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>');
+  h = h.replace(/((?:<li>.*<\/li>\\n?)+)/g, '<ul>$1</ul>');
+  var lines = h.split('\\n');
+  var out = [];
+  for (var i = 0; i < lines.length; i++) {{
+    var line = lines[i].trim();
+    if (!line) continue;
+    if (line.charAt(0) === '<') out.push(line);
+    else out.push('<p>' + line + '</p>');
+  }}
+  return out.join('\\n');
+}}
+document.querySelectorAll('.md-content[data-md]').forEach(function(el) {{
+  el.innerHTML = renderMd(el.dataset.md);
+}});
 </script></body></html>"""
 
 
