@@ -1,66 +1,58 @@
 ---
 name: "interactive-form"
 description: "结构化交互表单：弹出浏览器窗口展示富表单（单选/多选/文本/截图/文件/代码/图片预览等），收集用户的精确输入并返回 JSON 结果。当需要用户做选择、填写参数、确认方案、上传文件或查看对比时使用。"
-inclusion: manual
 ---
 
 # Interactive Form
 
-当你需要向用户收集结构化输入（而不是纯文本对话）时，使用此 skill。
+当你需要向用户收集结构化输入时，**必须**使用此 skill，**禁止**在聊天里用文字列选项让用户回复字母/数字。
 
-## 核心原则
+## 何时触发（必须使用的场景）
 
-**尽可能多地使用此 skill。** 具体来说：
+以下场景**全部**必须弹表单，没有例外：
 
-1. **任何涉及用户决策的场景都必须弹表单**，不要在聊天里用文字列选项让用户回复字母/数字
-2. **你不确定、想不明白的事情，让用户来决策**——构造一个表单把选项列出来
-3. **每个表单底部必须自动追加一个 `_extra` 字段**（textarea，label 为"还有别的想说的吗？"），让用户可以补充自定义想法。这个字段不需要在 JSON spec 里手动写，脚本会自动追加
+- 🔀 **二选一或多选一**：方案 A vs B、风格选择、配置选项
+- ✅ **确认操作**：删除、发布、重构、破坏性变更
+- 📝 **收集参数**：名称、版本号、路径、配置值
+- 🎯 **优先级排序**：多个任务/功能让用户排优先级
+- 🔧 **配置生成**：生成配置文件前收集用户偏好
+- 📋 **Review 确认**：展示变更摘要让用户确认
+- 🤔 **任何不确定的事**：你拿不准的，构造表单让用户决定
 
-适用场景举例：
-- 选择方案/风格/配置 → radio / checkbox
-- 确认危险操作 → confirm
-- 填写参数/名称 → text / number
-- 选择文件/目录 → select / file
-- 需要用户看图确认 → display_image + confirm
-- 多步骤决策 → 多次调用表单
-- 任何"你选 a 还是 b"的场景 → 全部走表单，不要用文字
+**判断标准**：如果你即将写出"你选 1 还是 2"或"你想要 A 还是 B"这样的文字，**停下来，改用表单**。
 
-## 使用流程
+## 一行命令启动
 
-1. 构造一个 JSON 表单描述，写入临时文件
-2. 运行脚本：
-   ```bash
-   python3 <this-skill-dir>/form.py /path/to/form.json
-   ```
-3. 脚本弹出浏览器窗口，用户填写表单
-4. 用户点击提交后，stdout 输出 JSON 结果，格式为 `{"field_id": value, ...}`
-5. 如果用户关闭窗口未提交，输出 `NO_SUBMIT`
+**推荐方式**：直接写 JSON 到临时文件并启动，一条命令搞定：
+
+```bash
+python3 ~/.kiro/skills/interactive-form/form.py /tmp/xxx.json
+```
+
+其中 `/tmp/xxx.json` 是你事先用 `write` 工具创建的表单 JSON 文件。
+
+**完整流程**：
+1. 用 `write` 工具创建 `/tmp/<描述性名称>.json`（表单 JSON）
+2. 用 `shell` 工具执行 `python3 ~/.kiro/skills/interactive-form/form.py /tmp/<描述性名称>.json`
+3. 读取 stdout 的 JSON 结果
 
 ## 表单 JSON 格式
 
 ```json
 {
   "title": "表单标题",
-  "description": "可选的说明文字（支持 markdown）",
+  "description": "说明文字（支持 markdown）",
   "fields": [
-    { "id": "name", "type": "text", "label": "名称", "placeholder": "输入名称", "required": true },
-    { "id": "style", "type": "radio", "label": "风格", "options": ["扁平", "渐变", "3D"], "default": "渐变" },
-    { "id": "features", "type": "checkbox", "label": "功能", "options": ["A", "B", "C"] },
-    { "id": "desc", "type": "textarea", "label": "描述", "rows": 4 },
-    { "id": "count", "type": "slider", "label": "数量", "min": 1, "max": 10, "default": 3 },
-    { "id": "enable", "type": "toggle", "label": "启用", "default": true },
-    { "id": "lang", "type": "select", "label": "语言", "options": ["中文", "English", "日本語"] },
-    { "id": "screenshot", "type": "image", "label": "粘贴截图" },
-    { "id": "file", "type": "file", "label": "上传文件", "accept": ".json,.yaml" },
-    { "id": "preview", "type": "display_image", "label": "预览", "url": "https://..." },
-    { "id": "code", "type": "code", "label": "代码", "language": "typescript", "value": "const x = 1;" },
-    { "id": "info", "type": "markdown", "content": "**注意**: 这是一段说明文字" },
-    { "id": "confirm", "type": "confirm", "label": "确认执行？", "danger": true }
+    { "id": "choice", "type": "radio", "label": "选择方案", "options": ["A. xxx", "B. yyy"], "required": true },
+    { "id": "name", "type": "text", "label": "名称", "placeholder": "输入名称" },
+    { "id": "features", "type": "checkbox", "label": "功能", "options": ["X", "Y", "Z"] },
+    { "id": "desc", "type": "textarea", "label": "补充说明", "rows": 3 }
   ],
-  "submitText": "提交",
-  "cancelText": "取消"
+  "submitText": "确认"
 }
 ```
+
+**注意**：脚本会自动在底部追加 `_extra` 字段（"还有别的想说的吗？"），不需要手动加。
 
 ## 支持的字段类型
 
@@ -69,28 +61,36 @@ inclusion: manual
 | `text` | 单行文本 | string |
 | `textarea` | 多行文本 | string |
 | `number` | 数字输入 | number |
-| `radio` | 单选 | string |
+| `radio` | 单选（最常用） | string |
 | `checkbox` | 多选 | string[] |
 | `select` | 下拉选择 | string |
 | `slider` | 滑块 | number |
 | `toggle` | 开关 | boolean |
-| `image` | 粘贴/拖拽图片 | base64 data URL 或临时文件路径 |
+| `image` | 粘贴/拖拽图片 | base64 data URL |
 | `file` | 上传文件 | 临时文件路径 |
 | `code` | 代码编辑器 | string |
 | `display_image` | 只读图片展示 | (无返回值) |
-| `markdown` | 只读 Markdown 展示 | (无返回值) |
+| `markdown` | 只读 Markdown | (无返回值) |
 | `confirm` | 确认按钮 | boolean |
 | `tags` | 标签输入 | string[] |
 | `color` | 颜色选择 | hex string |
 | `date` | 日期选择 | ISO date string |
 
+## 设计表单的原则
+
+1. **选项要具体**：不要写"方案 A"，要写"A. 用 HashMap 缓存，O(1) 查找"
+2. **给默认值**：用 `default` 字段预选最合理的选项，减少用户操作
+3. **必填标记**：关键字段加 `"required": true`
+4. **简洁优先**：一个表单 3-6 个字段最佳，超过 8 个考虑拆分
+5. **radio 优先**：2-5 个选项用 radio，6+ 用 select
+
+## 返回值处理
+
+- 正常提交：stdout 输出 `{"field_id": value, ...}`
+- 用户关闭窗口：stdout 输出 `NO_SUBMIT`
+- `_extra` 字段包含用户的自由补充，**必须阅读并纳入考虑**
+
 ## 依赖
 
 - Python 3（标准库，无第三方依赖）
 - Chromium 系浏览器（--app 模式）
-
-## 跨平台
-
-- macOS：优先查找 /Applications/ 下的浏览器
-- Linux：通过 PATH 查找 google-chrome、chromium 等
-- Windows：fallback 到 webbrowser.open()
