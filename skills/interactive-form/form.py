@@ -189,6 +189,9 @@ def build_html(spec: dict) -> str:
   .md-content h3 {{ font-size:14px; }}
   .md-content h2 {{ font-size:15px; }}
   .md-content p {{ margin:4px 0; }}
+  .md-content table {{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }}
+  .md-content th,.md-content td {{ border:1px solid #ddd; padding:6px 10px; text-align:left; }}
+  .md-content th {{ background:#f5f5f5; font-weight:600; }}
   .md-content code {{ background:#f0f0f0; padding:1px 5px; border-radius:4px; font-size:12px; font-family:'SF Mono',Menlo,monospace; }}
   .md-content strong {{ color:#333; }}
   .md-content ul,.md-content ol {{ padding-left:20px; margin:4px 0; }}
@@ -318,6 +321,31 @@ function renderMd(src) {{
     .replace(/^- (.+)$/gm, '<li>$1</li>')
     .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>');
   h = h.replace(/((?:<li>.*<\/li>\\n?)+)/g, '<ul>$1</ul>');
+  // Table rendering
+  var tableRe = /((?:^\\|.+\\|$\\n?)+)/gm;
+  h = h.replace(tableRe, function(block) {{
+    var rows = block.trim().split('\\n').filter(function(r){{ return r.trim(); }});
+    if (rows.length < 2) return block;
+    var isSep = function(r){{ return /^\\|[\\s:|-]+\\|$/.test(r.trim()); }};
+    var parseRow = function(r){{ return r.replace(/^\\|/, '').replace(/\\|$/, '').split('|').map(function(c){{ return c.trim(); }}); }};
+    var thead = '', tbody = '', sepIdx = -1;
+    for (var ri = 0; ri < rows.length; ri++) {{ if (isSep(rows[ri])) {{ sepIdx = ri; break; }} }}
+    if (sepIdx === 1) {{
+      var hcells = parseRow(rows[0]);
+      thead = '<thead><tr>' + hcells.map(function(c){{ return '<th>' + c + '</th>'; }}).join('') + '</tr></thead>';
+      for (var ri = 2; ri < rows.length; ri++) {{
+        var cells = parseRow(rows[ri]);
+        tbody += '<tr>' + cells.map(function(c){{ return '<td>' + c + '</td>'; }}).join('') + '</tr>';
+      }}
+    }} else {{
+      for (var ri = 0; ri < rows.length; ri++) {{
+        if (isSep(rows[ri])) continue;
+        var cells = parseRow(rows[ri]);
+        tbody += '<tr>' + cells.map(function(c){{ return '<td>' + c + '</td>'; }}).join('') + '</tr>';
+      }}
+    }}
+    return '<table>' + thead + '<tbody>' + tbody + '</tbody></table>';
+  }});
   var lines = h.split('\\n');
   var out = [];
   for (var i = 0; i < lines.length; i++) {{
