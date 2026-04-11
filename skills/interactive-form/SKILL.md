@@ -23,18 +23,18 @@ description: "结构化交互表单：弹出浏览器窗口展示富表单（单
 
 ## 一行命令启动
 
-**推荐方式**：直接写 JSON 到临时文件并启动，一条命令搞定：
+**必须使用固定路径**，这样用户只需授权一次：
 
 ```bash
-python3 ~/.kiro/skills/interactive-form/form.py /tmp/xxx.json
+python3 ~/.kiro/skills/interactive-form/form.py /tmp/interactive-form.json
 ```
 
-其中 `/tmp/xxx.json` 是你事先用 `write` 工具创建的表单 JSON 文件。
-
 **完整流程**：
-1. 用 `write` 工具创建 `/tmp/<描述性名称>.json`（表单 JSON）
-2. 用 `shell` 工具执行 `python3 ~/.kiro/skills/interactive-form/form.py /tmp/<描述性名称>.json`
+1. 用 `write` 工具创建 `/tmp/interactive-form.json`（表单 JSON，每次覆盖同一个文件）
+2. 用 `shell` 工具执行 `python3 ~/.kiro/skills/interactive-form/form.py /tmp/interactive-form.json`
 3. 读取 stdout 的 JSON 结果
+
+**关键**：路径永远是 `/tmp/interactive-form.json`，命令永远是同一条，用户授权一次后续自动通过。
 
 ## 表单 JSON 格式
 
